@@ -2141,33 +2141,20 @@ class PolChange:
 
         :return: linear polarized Gain
         """
-
-        XX = (G[..., 0] + G[..., -1])
-        XY = 1j * (G[..., 0] - G[..., -1])
-        YX = 1j * (G[..., -1] - G[..., 0])
-        YY = (G[..., 0] + G[..., -1])
-
+        G_new = zeros(G.shape, dtype=complex128)
 
         if G.shape[-1] == 4:
-            XX += (G[..., 2] + G[..., 1])
-            XY += 1j * (G[..., 2] - G[..., 1])
-            YX += 1j * (G[..., 2] - G[..., 1])
-            YY -= (G[..., 1] + G[..., 2])
-
-        XX /= 2
-        XY /= 2
-        YX /= 2
-        YY /= 2
-
-        G_new = zeros(G.shape[0:-1] + (4,)).astype(complex128)
-
-        G_new[..., 0] += XX
-        G_new[..., 1] += XY
-        G_new[..., 2] += YX
-        G_new[..., 3] += YY
-
+            G_new[..., 0] = (G[..., 0] + G[..., 1] + G[..., 2] + G[..., 3])
+            G_new[..., 1] = (1j * G[..., 0] - 1j * G[..., 1] + 1j * G[..., 2] - 1j * G[..., 3])
+            G_new[..., 2] = (-1j * G[..., 0] + 1j * G[..., 1] + 1j * G[..., 2] + 1j * G[..., 3])
+            G_new[..., 3] = (G[..., 0] - G[..., 1] - G[..., 2] + G[..., 3])
+        else:
+            XX = (G[..., 0] + G[..., -1])
+            XY = 1j * (G[..., 0] - G[..., -1])
+            YX = 1j * (G[..., -1] - G[..., 0])
+            YY = (G[..., 0] + G[..., -1])
+        G_new /= 2
         G_new = where(abs(G_new) < 10 * finfo(float).eps, 0, G_new)
-
         return G_new
 
     @staticmethod
